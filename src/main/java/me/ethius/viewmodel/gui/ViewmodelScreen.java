@@ -26,7 +26,8 @@ public class ViewmodelScreen extends Screen {
     public ViewmodelScreen() {
         super(Text.of("Viewmodel"));
     }
-
+    
+    @Override
     public void init() {
         int settingCount = 0;
         for (Setting setting : Viewmodel.SETTINGS) {
