@@ -24,6 +24,7 @@ public class ViewmodelScreen extends Screen {
 
     @Override
     public final void init() {
+        this.objs.clear();
         List<Setting<?>> settingsList = Viewmodel.getSettings();
         range(0, settingsList.size()).forEachOrdered(i -> {
             var setting = settingsList.get(i);
@@ -33,7 +34,7 @@ public class ViewmodelScreen extends Screen {
 
     @Override
     public final void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        this.renderBackground(context, mouseX, mouseY, delta);
+        context.fill(0, 0, this.width, this.height, 0xAA000000); // semi-transparent black
         this.objs.forEach(obj -> obj.render(context, mouseX, mouseY));
     }
 

@@ -34,9 +34,16 @@ public class Slider implements ViewmodelGuiObj {
 
     @Override
     public final void mouseScrolled(double mx, double my, float incx, float incy) {
-        float inc = Math.max(incx, incy);
-        this.setting.setValue(MathHelper.clamp(this.setting.getValue() + inc * 0.1F, this.min, this.max));
+        // Prefer the axis with the larger magnitude (so negatives are preserved)
+        float delta = Math.abs(incx) >= Math.abs(incy) ? incx : incy;
+        if (delta == 0f) return;
+
+        // If your scroll direction feels inverted, uncomment the next line:
+        // delta = -delta;
+
+        this.setting.setValue(MathHelper.clamp(this.setting.getValue() + delta * 0.1f, this.min, this.max));
     }
+
 
     @Override
     public final void mouseClicked(double mx, double my) {
