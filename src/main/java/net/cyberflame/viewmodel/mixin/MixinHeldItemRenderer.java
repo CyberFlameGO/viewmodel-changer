@@ -47,7 +47,7 @@ public abstract class MixinHeldItemRenderer {
     protected abstract void applySwingOffset(MatrixStack matrices, Arm arm, float swingProgress);
 
     @Shadow
-    public abstract void renderItem(LivingEntity entity, ItemStack stack, ItemDisplayContext renderMode, boolean leftHanded, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light);
+    public abstract void renderItem(LivingEntity entity, ItemStack stack, ItemDisplayContext renderMode, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light);
 
     @Shadow
     protected abstract void applyEatOrDrinkTransformation(MatrixStack matrices, float tickDelta, Arm arm, ItemStack stack, PlayerEntity player);
@@ -130,7 +130,7 @@ public abstract class MixinHeldItemRenderer {
                         }
                     }
 
-                    this.renderItem(player, item, bl3 ? ItemDisplayContext.FIRST_PERSON_RIGHT_HAND : ItemDisplayContext.FIRST_PERSON_LEFT_HAND, !bl3, matrices, vertexConsumers, light);
+                    this.renderItem(player, item, bl3 ? ItemDisplayContext.FIRST_PERSON_RIGHT_HAND : ItemDisplayContext.FIRST_PERSON_LEFT_HAND, matrices, vertexConsumers, light);
                 } else {
                     bl4 = Arm.RIGHT == arm;
                     int o;
@@ -187,7 +187,7 @@ public abstract class MixinHeldItemRenderer {
                         this.applySwingOffset(matrices, arm, swingProgress);
                     }
 
-                    this.renderItem(player, item, bl4 ? ItemDisplayContext.FIRST_PERSON_RIGHT_HAND : ItemDisplayContext.FIRST_PERSON_LEFT_HAND, !bl4, matrices, vertexConsumers, light);
+                    this.renderItem(player, item, bl4 ? ItemDisplayContext.FIRST_PERSON_RIGHT_HAND : ItemDisplayContext.FIRST_PERSON_LEFT_HAND, matrices, vertexConsumers, light);
                 }
             }
 
