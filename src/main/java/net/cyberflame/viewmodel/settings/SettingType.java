@@ -2,39 +2,58 @@ package net.cyberflame.viewmodel.settings;
 
 import org.jetbrains.annotations.Contract;
 
+/**
+ * Перечисление всех доступных настроек для viewmodel.
+ * Каждая рука настраивается отдельно для максимальной гибкости.
+ */
 public enum SettingType {
-    CHANGE_SWING("Change Swing", false),
-    POS("Position", false),
-    POS_X("Position X", 0, -2, 2),
-    POS_Y("Position Y", 0, -2, 2),
-    POS_Z("Position Z", 0, -2, 2),
-    ROTATION("Rotation", false),
-    ROTATION_X("Rotation X", 0, -180, 180),
-    ROTATION_Y("Rotation Y", 0, -180, 180),
-    ROTATION_Z("Rotation Z", 0, -180, 180),
-    SCALE("Scale", false),
-    SCALE_X("Scale X", 1, 0, 3),
-    SCALE_Y("Scale Y", 1, 0, 3),
-    SCALE_Z("Scale Z", 1, 0, 3);
 
-    private final String name;
+    // === ОСНОВНАЯ РУКА (Main Hand) ===
+
+    // Включение/выключение настроек позиции основной руки
+    MAIN_HAND_POS("Основная рука: Позиция", true),
+
+    // Позиция основной руки по осям (X - влево/вправо, Y - вверх/вниз, Z - вперед/назад)
+    MAIN_HAND_POS_X("└ Смещение X", 0.0f, -10.0f, 10.0f),
+    MAIN_HAND_POS_Y("└ Смещение Y", 0.0f, -10.0f, 10.0f),
+    MAIN_HAND_POS_Z("└ Смещение Z", 0.0f, -10.0f, 10.0f),
+
+    // Включение/выключение настроек вращения основной руки
+    MAIN_HAND_ROTATION("Основная рука: Вращение", false),
+
+    // Вращение основной руки (X - pitch, Y - yaw, Z - roll)
+    MAIN_HAND_ROTATION_X("└ Поворот X (Pitch)", 0.0f, -180.0f, 180.0f),
+    MAIN_HAND_ROTATION_Y("└ Поворот Y (Yaw)", 0.0f, -180.0f, 180.0f),
+    MAIN_HAND_ROTATION_Z("└ Поворот Z (Roll)", 0.0f, -180.0f, 180.0f),
+
+    // === ВТОРАЯ РУКА (Off Hand) ===
+
+    // Включение/выключение настроек позиции второй руки
+    OFF_HAND_POS("Вторая рука: Позиция", true),
+
+    // Позиция второй руки по осям
+    OFF_HAND_POS_X("└ Смещение X", 0.0f, -10.0f, 10.0f),
+    OFF_HAND_POS_Y("└ Смещение Y", 0.0f, -10.0f, 10.0f),
+    OFF_HAND_POS_Z("└ Смещение Z", 0.0f, -10.0f, 10.0f),
+
+    // Включение/выключение настроек вращения второй руки
+    OFF_HAND_ROTATION("Вторая рука: Вращение", false),
+
+    // Вращение второй руки
+    OFF_HAND_ROTATION_X("└ Поворот X (Pitch)", 0.0f, -180.0f, 180.0f),
+    OFF_HAND_ROTATION_Y("└ Поворот Y (Yaw)", 0.0f, -180.0f, 180.0f),
+    OFF_HAND_ROTATION_Z("└ Поворот Z (Roll)", 0.0f, -180.0f, 180.0f);
+
     private final Setting<?> setting;
 
-    @Contract(pure = true)
+    // Конструктор для boolean настроек
     SettingType(String name, boolean defaultValue) {
-        this.name = name;
         this.setting = new BooleanSetting(name, defaultValue);
     }
 
-    @Contract(pure = true)
-    SettingType(String name, float defaultValue, float minValue, float maxValue) {
-        this.name = name;
-        this.setting = new FloatSetting(name, defaultValue, minValue, maxValue);
-    }
-
-    @Contract(pure = true)
-    public String getName() {
-        return this.name;
+    // Конструктор для float настроек с диапазоном
+    SettingType(String name, float defaultValue, float min, float max) {
+        this.setting = new FloatSetting(name, defaultValue, min, max);
     }
 
     @Contract(pure = true)
@@ -42,20 +61,23 @@ public enum SettingType {
         return this.setting;
     }
 
+    /**
+     * Проверяет, является ли настройка булевой и включена ли она.
+     */
     public boolean isTrue() {
-        if (this.setting instanceof BooleanSetting) {
-            return ((BooleanSetting) this.setting).getValue();
-        } else {
-            throw new IllegalStateException("Setting is not a BooleanSetting.");
+        if (this.setting instanceof BooleanSetting boolSetting) {
+            return boolSetting.getValue();
         }
+        return false;
     }
 
-    // Method to get the float value directly from SettingType
+    /**
+     * Получает значение float настройки.
+     */
     public float getFloatValue() {
-        if (this.setting instanceof FloatSetting) {
-            return ((FloatSetting) this.setting).getValue();
-        } else {
-            throw new IllegalStateException("Setting is not a FloatSetting.");
+        if (this.setting instanceof FloatSetting floatSetting) {
+            return floatSetting.getValue();
         }
+        return 0.0f;
     }
 }
