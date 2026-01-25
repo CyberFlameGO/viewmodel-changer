@@ -13,35 +13,15 @@ public non-sealed class FloatSetting implements Setting<Float> {
 
     private Float value;
     private final String name;
-    private final float min;
-    private final float max;
+    private final float min, max;
 
     @Contract(pure = true)
-    FloatSetting(String name, float defaultValue, float minVal, float maxVal) {
+    FloatSetting(String settingName, float defaultValue, float min, float max) {
         super();
-        this.name = name;
+        this.name = settingName;
         this.value = defaultValue;
-        this.min = minVal;
-        this.max = maxVal;
-    }
-
-    @Contract(pure = true)
-    @Override
-    public final String getName() {
-        return this.name;
-    }
-
-    @Contract(mutates = "this")
-    @Override
-    public final void setValue(Float val) {
-        this.value = val;
-    }
-
-    @Override
-    public final void setValue(@NotNull JsonElement element) {
-        if (element.isJsonPrimitive() && element.getAsJsonPrimitive().isNumber()) {
-            this.value = element.getAsFloat();
-        }
+        this.min = min;
+        this.max = max;
     }
 
     @Contract(value = " -> new", pure = true)
@@ -52,17 +32,29 @@ public non-sealed class FloatSetting implements Setting<Float> {
 
     @Contract(pure = true)
     @Override
+    public final String getName() {
+        return this.name;
+    }
+
+    @Override
+    public final void setValue(@NotNull JsonElement element) {
+        if (element.isJsonPrimitive() && element.getAsJsonPrimitive().isNumber()) {
+            this.value = element.getAsFloat();
+        }
+    }
+
+    @Contract(mutates = "this")
+    @Override
+    public final void setValue(Float value) {
+        this.value = value;
+    }
+
+    @Contract(pure = true)
+    @Override
     public final Float getValue() {
         return this.value;
     }
 
-    @Override
-    public final void createUIElement(@NotNull Collection<? super ViewmodelGuiObj> objs, int settingCount) {
-        // Create UI element for FloatSetting
-        objs.add(new Slider(this, 80, 50 + (settingCount << 4), 80, 12));
-    }
-
-    // Additional methods specific to FloatSetting if needed
     @Contract(pure = true)
     public final float getMin() {
         return this.min;
@@ -71,5 +63,16 @@ public non-sealed class FloatSetting implements Setting<Float> {
     @Contract(pure = true)
     public final float getMax() {
         return this.max;
+    }
+
+    @Override
+    public final void createUIElementWithTooltip(@NotNull Collection<? super ViewmodelGuiObj> objs,
+                                                 int settingIndex, int x, int y,
+                                                 int width, int height, String tooltip) {
+        int sliderWidth = Math.min(width, 230);
+        int sliderHeight = Math.max(12, height);
+        Slider slider = new Slider(this, x, y, sliderWidth, sliderHeight);
+        slider.setTooltip(tooltip);
+        objs.add(slider);
     }
 }

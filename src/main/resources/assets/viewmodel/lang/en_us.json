@@ -1,4 +1,23 @@
 {
-  "category.viewmodel.menu": "Viewmodel",
-  "key.viewmodel.open": "Open Viewmodel Settings"
+  "viewmodel.screen.title": "Viewmodel Settings",
+
+  "viewmodel.hand.left": "LEFT HAND",
+  "viewmodel.hand.right": "RIGHT HAND",
+  "viewmodel.hand.main": "(Main)",
+  "viewmodel.hand.offhand": "(Offhand)",
+
+  "viewmodel.tooltip.position": "Enable hand position adjustment",
+  "viewmodel.tooltip.pos_x": "← Left / Right →",
+  "viewmodel.tooltip.pos_y": "↓ Down / Up ↑",
+  "viewmodel.tooltip.pos_z": "← Closer / Further →",
+
+  "viewmodel.tooltip.rotation": "Enable hand rotation adjustment",
+  "viewmodel.tooltip.rot_x": "↑ Pitch up/down ↓",
+  "viewmodel.tooltip.rot_y": "← Yaw left/right →",
+  "viewmodel.tooltip.rot_z": "⟲ Roll (tilt sideways) ⟳",
+
+  "viewmodel.hint.controls": "ESC - Close  |  Mouse Wheel - Fine Tune  |  LMB - Drag",
+
+  "key.viewmodel.open": "Open Viewmodel Settings",
+  "category.viewmodel.menu": "Viewmodel"
 }

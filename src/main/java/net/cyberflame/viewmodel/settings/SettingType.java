@@ -1,61 +1,39 @@
 package net.cyberflame.viewmodel.settings;
 
-import org.jetbrains.annotations.Contract;
-
 public enum SettingType {
-    CHANGE_SWING("Change Swing", false),
-    POS("Position", false),
-    POS_X("Position X", 0, -2, 2),
-    POS_Y("Position Y", 0, -2, 2),
-    POS_Z("Position Z", 0, -2, 2),
-    ROTATION("Rotation", false),
-    ROTATION_X("Rotation X", 0, -180, 180),
-    ROTATION_Y("Rotation Y", 0, -180, 180),
-    ROTATION_Z("Rotation Z", 0, -180, 180),
-    SCALE("Scale", false),
-    SCALE_X("Scale X", 1, 0, 3),
-    SCALE_Y("Scale Y", 1, 0, 3),
-    SCALE_Z("Scale Z", 1, 0, 3);
+    // Main hand
+    MAIN_HAND_ENABLED    ("viewmodel.setting.main_hand_enabled", true),
+    MAIN_HAND_POS_X      ("viewmodel.setting.pos_x", 0f, -50f, 50f),
+    MAIN_HAND_POS_Y      ("viewmodel.setting.pos_y", 0f, -10f, 10f),
+    MAIN_HAND_POS_Z      ("viewmodel.setting.pos_z", 0f, -50f, 50f),
+    MAIN_HAND_ROT_X      ("viewmodel.setting.rot_x", 0f, -180f, 180f),
+    MAIN_HAND_ROT_Y      ("viewmodel.setting.rot_y", 0f, -180f, 180f),
+    MAIN_HAND_ROT_Z      ("viewmodel.setting.rot_z", 0f, -180f, 180f),
 
-    private final String name;
+    // Off hand
+    OFF_HAND_ENABLED     ("viewmodel.setting.off_hand_enabled", false),
+    OFF_HAND_POS_X       ("viewmodel.setting.pos_x", 0f, -50f, 50f),
+    OFF_HAND_POS_Y       ("viewmodel.setting.pos_y", 0f, -10f, 10f),
+    OFF_HAND_POS_Z       ("viewmodel.setting.pos_z", 0f, -50f, 50f),
+    OFF_HAND_ROT_X       ("viewmodel.setting.rot_x", 0f, -180f, 180f),
+    OFF_HAND_ROT_Y       ("viewmodel.setting.rot_y", 0f, -180f, 180f),
+    OFF_HAND_ROT_Z       ("viewmodel.setting.rot_z", 0f, -180f, 180f);
+
     private final Setting<?> setting;
+    private final String langKey;
 
-    @Contract(pure = true)
-    SettingType(String name, boolean defaultValue) {
-        this.name = name;
-        this.setting = new BooleanSetting(name, defaultValue);
+    SettingType(String langKey, boolean def) {
+        this.langKey = langKey;
+        this.setting = new BooleanSetting(name(), def);
     }
 
-    @Contract(pure = true)
-    SettingType(String name, float defaultValue, float minValue, float maxValue) {
-        this.name = name;
-        this.setting = new FloatSetting(name, defaultValue, minValue, maxValue);
+    SettingType(String langKey, float def, float min, float max) {
+        this.langKey = langKey;
+        this.setting = new FloatSetting(name(), def, min, max);
     }
 
-    @Contract(pure = true)
-    public String getName() {
-        return this.name;
-    }
-
-    @Contract(pure = true)
-    public Setting<?> getSetting() {
-        return this.setting;
-    }
-
-    public boolean isTrue() {
-        if (this.setting instanceof BooleanSetting) {
-            return ((BooleanSetting) this.setting).getValue();
-        } else {
-            throw new IllegalStateException("Setting is not a BooleanSetting.");
-        }
-    }
-
-    // Method to get the float value directly from SettingType
-    public float getFloatValue() {
-        if (this.setting instanceof FloatSetting) {
-            return ((FloatSetting) this.setting).getValue();
-        } else {
-            throw new IllegalStateException("Setting is not a FloatSetting.");
-        }
-    }
+    public Setting<?> getSetting() { return setting; }
+    public String getLangKey()     { return langKey; }
+    public boolean isEnabled()     { return ((BooleanSetting) setting).getValue(); }
+    public float getValue()        { return ((FloatSetting) setting).getValue(); }
 }

@@ -38,11 +38,6 @@ public non-sealed class BooleanSetting implements Setting<Boolean> {
         if (element.isJsonPrimitive() && element.getAsJsonPrimitive().isBoolean()) {
             this.value = element.getAsBoolean();
         }
-
-        // Potentially add an else to handle invalid JSON element for a boolean setting - perhaps one of these?
-        // this.element = defaultValue; // Set default element
-        // throw new IllegalArgumentException("Invalid element for boolean setting.");
-
     }
 
     @Contract(mutates = "this")
@@ -58,9 +53,12 @@ public non-sealed class BooleanSetting implements Setting<Boolean> {
     }
 
     @Override
-    public final void createUIElement(@NotNull Collection<? super ViewmodelGuiObj> objs, int settingCount) {
-        objs.add(new Switch(this, 80, 50 + (settingCount << 4), 12));
+    public final void createUIElementWithTooltip(@NotNull Collection<? super ViewmodelGuiObj> objs,
+                                                 int settingIndex, int x, int y,
+                                                 int width, int height, String tooltip) {
+        int switchSize = Math.max(12, height + 2);
+        Switch switchObj = new Switch(this, x, y, switchSize);
+        switchObj.setTooltip(tooltip);
+        objs.add(switchObj);
     }
-
-
 }

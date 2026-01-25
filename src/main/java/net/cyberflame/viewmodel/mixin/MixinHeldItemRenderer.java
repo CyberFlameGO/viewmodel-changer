@@ -1,5 +1,6 @@
 package net.cyberflame.viewmodel.mixin;
 
+import net.cyberflame.viewmodel.settings.SettingType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -22,22 +23,30 @@ import java.util.Objects;
 
 import static net.cyberflame.viewmodel.settings.SettingType.*;
 
+/**
+ * Mixin для модификации рендеринга предметов в руках игрока.
+ * Применяет настройки позиции, вращения и масштаба раздельно для каждой руки.
+ */
 @Mixin(HeldItemRenderer.class)
 public abstract class MixinHeldItemRenderer {
 
     @Shadow
-    protected abstract void renderArmHoldingItem(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, float equipProgress, float swingProgress, Arm arm);
+    protected abstract void renderArmHoldingItem(MatrixStack matrices, VertexConsumerProvider vertexConsumers,
+                                                 int light, float equipProgress, float swingProgress, Arm arm);
 
     @Shadow
     private ItemStack offHand;
 
     @Shadow
-    protected abstract void renderMapInBothHands(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, float pitch, float equipProgress, float swingProgress);
+    protected abstract void renderMapInBothHands(MatrixStack matrices, VertexConsumerProvider vertexConsumers,
+                                                 int light, float pitch, float equipProgress, float swingProgress);
 
     @Shadow
-    protected abstract void renderMapInOneHand(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, float equipProgress, Arm arm, float swingProgress, ItemStack stack);
+    protected abstract void renderMapInOneHand(MatrixStack matrices, VertexConsumerProvider vertexConsumers,
+                                               int light, float equipProgress, Arm arm, float swingProgress, ItemStack stack);
 
-    @Shadow protected abstract void applyEquipOffset(MatrixStack matrices, Arm arm, float equipProgress);
+    @Shadow
+    protected abstract void applyEquipOffset(MatrixStack matrices, Arm arm, float equipProgress);
 
     @Shadow
     @Final
@@ -47,32 +56,54 @@ public abstract class MixinHeldItemRenderer {
     protected abstract void applySwingOffset(MatrixStack matrices, Arm arm, float swingProgress);
 
     @Shadow
-    public abstract void renderItem(LivingEntity entity, ItemStack stack, ItemDisplayContext renderMode, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light);
+    public abstract void renderItem(LivingEntity entity, ItemStack stack, ItemDisplayContext renderMode,
+                                    MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light);
 
     @Shadow
-    protected abstract void applyEatOrDrinkTransformation(MatrixStack matrices, float tickDelta, Arm arm, ItemStack stack, PlayerEntity player);
+    protected abstract void applyEatOrDrinkTransformation(MatrixStack matrices, float tickDelta, Arm arm,
+                                                          ItemStack stack, PlayerEntity player);
 
+    @Unique
+    private void applyCustomTransforms(MatrixStack matrices, Hand hand, Arm arm) {
+        boolean isMainHand = hand == Hand.MAIN_HAND;
+
+        SettingType posEnabled = isMainHand ? SettingType.MAIN_HAND_ENABLED : SettingType.OFF_HAND_ENABLED;
+        SettingType posX = isMainHand ? SettingType.MAIN_HAND_POS_X : SettingType.OFF_HAND_POS_X;
+        SettingType posY = isMainHand ? SettingType.MAIN_HAND_POS_Y : SettingType.OFF_HAND_POS_Y;
+        SettingType posZ = isMainHand ? SettingType.MAIN_HAND_POS_Z : SettingType.OFF_HAND_POS_Z;
+
+        SettingType rotX = isMainHand ? SettingType.MAIN_HAND_ROT_X : SettingType.OFF_HAND_ROT_X;
+        SettingType rotY = isMainHand ? SettingType.MAIN_HAND_ROT_Y : SettingType.OFF_HAND_ROT_Y;
+        SettingType rotZ = isMainHand ? SettingType.MAIN_HAND_ROT_Z : SettingType.OFF_HAND_ROT_Z;
+
+        if (posEnabled.isEnabled()) {
+            matrices.translate(
+                    posX.getValue() * 0.1,
+                    posY.getValue() * 0.1,
+                    posZ.getValue() * 0.1
+            );
+        }
+
+        matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(rotX.getValue()));
+        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(rotY.getValue()));
+        matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rotZ.getValue()));
+    }
     /**
      * @author CyberFlame
-     * @reason The inject would always cancel and therefore can cause incompatibilities with other mods.
+     * @reason Применение раздельных настроек для каждой руки
      */
     @Overwrite
-    public void renderFirstPersonItem(@NotNull AbstractClientPlayerEntity player, float tickDelta, float pitch, Hand hand, float swingProgress, ItemStack item, float equipProgress, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
+    public void renderFirstPersonItem(@NotNull AbstractClientPlayerEntity player, float tickDelta, float pitch,
+                                      Hand hand, float swingProgress, ItemStack item, float equipProgress,
+                                      MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
         if (!player.isUsingSpyglass()) {
             boolean bl = Hand.MAIN_HAND == hand;
             Arm arm = bl ? player.getMainArm() : player.getMainArm().getOpposite();
             matrices.push();
-            if (POS.isTrue()) {
-                matrices.translate(POS_X.getFloatValue() * 0.1, POS_Y.getFloatValue() * 0.1, POS_Z.getFloatValue() * 0.1);
-            }
-            if (ROTATION.isTrue()) {
-                matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(ROTATION_Y.getFloatValue()));
-                matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(ROTATION_X.getFloatValue()));
-                matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(ROTATION_Z.getFloatValue()));
-            }
-            if (SCALE.isTrue()) {
-                matrices.scale(1 - (1 - SCALE_X.getFloatValue()) * 0.1F, 1 - (1 - SCALE_Y.getFloatValue()) * 0.1F, 1 - (1 - SCALE_Z.getFloatValue()) * 0.1F);
-            }
+
+            // Применяем пользовательские трансформации для текущей руки
+            applyCustomTransforms(matrices, hand, arm);
+
             if (item.isEmpty()) {
                 if (bl && !player.isInvisible()) {
                     this.renderArmHoldingItem(matrices, vertexConsumers, light, equipProgress, swingProgress, arm);
@@ -172,9 +203,6 @@ public abstract class MixinHeldItemRenderer {
                     } else if (player.isUsingRiptide()) {
                         this.applyEquipOffset(matrices, arm, equipProgress);
                         o = bl4 ? 1 : -1;
-                        if (!CHANGE_SWING.isTrue()) {
-                            matrices.translate((float) o * -0.4F, 0.800000011920929D, 0.30000001192092896D);
-                        }
                         matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees((float)o * 65.0F));
                         matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees((float)o * -85.0F));
                     } else {
@@ -193,7 +221,6 @@ public abstract class MixinHeldItemRenderer {
 
             matrices.pop();
         }
-
     }
 
     @Unique
@@ -215,7 +242,8 @@ public abstract class MixinHeldItemRenderer {
     }
 
     @Unique
-    private static float getU(float tickDelta, @NotNull ItemStack item, @NotNull MatrixStack matrices, float o, @NotNull MinecraftClient client) {
+    private static float getU(float tickDelta, @NotNull ItemStack item, @NotNull MatrixStack matrices,
+                              float o, @NotNull MinecraftClient client) {
         float u;
         matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(o * 35.3F));
         matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(o * -9.785F));
@@ -224,5 +252,4 @@ public abstract class MixinHeldItemRenderer {
         u = (float) item.getMaxUseTime(playerEntity) - ((float) playerEntity.getItemUseTimeLeft() - tickDelta + 1.0F);
         return u;
     }
-
 }
