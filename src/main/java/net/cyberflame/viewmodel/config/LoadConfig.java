@@ -14,9 +14,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-/**
- * @author ChiquitaV2
- */
 public class LoadConfig {
 
     public LoadConfig() throws IOException {
@@ -40,7 +37,7 @@ public class LoadConfig {
             for (Setting value : Viewmodel.getSettings()) {
                 JsonElement valueElement = viewmodelObj.get(value.getName());
                 if (null == valueElement) continue;
-                value.setValue(valueElement); // Polymorphism handles the specific type internally
+                value.setValue(valueElement);
             }
 
             inputStream.close();
@@ -51,6 +48,4 @@ public class LoadConfig {
                 inputStreamReader.close();
         }
     }
-
-
 }

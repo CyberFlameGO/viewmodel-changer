@@ -1,5 +1,6 @@
 package net.cyberflame.viewmodel.mixin;
 
+import net.cyberflame.viewmodel.settings.SettingType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -62,46 +63,31 @@ public abstract class MixinHeldItemRenderer {
     protected abstract void applyEatOrDrinkTransformation(MatrixStack matrices, float tickDelta, Arm arm,
                                                           ItemStack stack, PlayerEntity player);
 
-    /**
-     * Применяет пользовательские трансформации к матрице в зависимости от руки.
-     *
-     * @param matrices Стек матриц для трансформаций
-     * @param hand Рука (основная или вторая)
-     * @param arm Сторона руки (правая или левая)
-     */
+    @Unique
     private void applyCustomTransforms(MatrixStack matrices, Hand hand, Arm arm) {
-        // Определяем, какая рука - основная или вторая
         boolean isMainHand = hand == Hand.MAIN_HAND;
 
-        // === ПОЗИЦИЯ (Position) ===
-        // X - влево/вправо, Y - вверх/вниз, Z - вперед/назад
-        if (isMainHand && MAIN_HAND_POS.isTrue()) {
+        SettingType posEnabled = isMainHand ? SettingType.MAIN_HAND_ENABLED : SettingType.OFF_HAND_ENABLED;
+        SettingType posX = isMainHand ? SettingType.MAIN_HAND_POS_X : SettingType.OFF_HAND_POS_X;
+        SettingType posY = isMainHand ? SettingType.MAIN_HAND_POS_Y : SettingType.OFF_HAND_POS_Y;
+        SettingType posZ = isMainHand ? SettingType.MAIN_HAND_POS_Z : SettingType.OFF_HAND_POS_Z;
+
+        SettingType rotX = isMainHand ? SettingType.MAIN_HAND_ROT_X : SettingType.OFF_HAND_ROT_X;
+        SettingType rotY = isMainHand ? SettingType.MAIN_HAND_ROT_Y : SettingType.OFF_HAND_ROT_Y;
+        SettingType rotZ = isMainHand ? SettingType.MAIN_HAND_ROT_Z : SettingType.OFF_HAND_ROT_Z;
+
+        if (posEnabled.isEnabled()) {
             matrices.translate(
-                    MAIN_HAND_POS_X.getFloatValue() * 0.1,
-                    MAIN_HAND_POS_Y.getFloatValue() * 0.1,
-                    MAIN_HAND_POS_Z.getFloatValue() * 0.1
-            );
-        } else if (!isMainHand && OFF_HAND_POS.isTrue()) {
-            matrices.translate(
-                    OFF_HAND_POS_X.getFloatValue() * 0.1,
-                    OFF_HAND_POS_Y.getFloatValue() * 0.1,
-                    OFF_HAND_POS_Z.getFloatValue() * 0.1
+                    posX.getValue() * 0.1,
+                    posY.getValue() * 0.1,
+                    posZ.getValue() * 0.1
             );
         }
 
-        // === ВРАЩЕНИЕ (Rotation) ===
-        // X - pitch (наклон вверх/вниз), Y - yaw (поворот влево/вправо), Z - roll (крен)
-        if (isMainHand && MAIN_HAND_ROTATION.isTrue()) {
-            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(MAIN_HAND_ROTATION_Y.getFloatValue()));
-            matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(MAIN_HAND_ROTATION_X.getFloatValue()));
-            matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(MAIN_HAND_ROTATION_Z.getFloatValue()));
-        } else if (!isMainHand && OFF_HAND_ROTATION.isTrue()) {
-            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(OFF_HAND_ROTATION_Y.getFloatValue()));
-            matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(OFF_HAND_ROTATION_X.getFloatValue()));
-            matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(OFF_HAND_ROTATION_Z.getFloatValue()));
-        }
+        matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(rotX.getValue()));
+        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(rotY.getValue()));
+        matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rotZ.getValue()));
     }
-
     /**
      * @author CyberFlame
      * @reason Применение раздельных настроек для каждой руки

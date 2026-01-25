@@ -1,5 +1,6 @@
 package net.cyberflame.viewmodel.gui;
 
+import net.cyberflame.viewmodel.config.SaveConfig;
 import net.cyberflame.viewmodel.settings.BooleanSetting;
 import net.minecraft.client.gui.DrawContext;
 import org.jetbrains.annotations.Contract;
@@ -16,24 +17,21 @@ public class Switch implements ViewmodelGuiObj {
     private boolean isHovered = false;
     private float animationProgress = 0.0f;
     private float hoverAnimation = 0.0f;
-    private String tooltip = "";
 
     public Switch(@NotNull BooleanSetting setting, int x, int y, int size) {
         this.setting = setting;
         this.x = x;
-        this.y = y;
-        this.width = size * 3;
-        this.height = size;
-    }
-
-    public void setTooltip(String tooltip) {
-        this.tooltip = tooltip;
+        this.y = y + 20;
+        this.width = size + 20;
+        this.height = 17;
+        this.animationProgress = setting.getValue() ? 1.0f : 0.0f;
     }
 
     @Override
     public final void mouseClicked(double mx, double my) {
         if (isWithin(mx, my)) {
             this.setting.setValue(!this.setting.getValue());
+            SaveConfig.saveAllSettings();
         }
     }
 
@@ -76,8 +74,8 @@ public class Switch implements ViewmodelGuiObj {
         context.drawTextWithShadow(
                 ViewmodelScreen.mc.textRenderer,
                 settingName,
-                this.x - ViewmodelScreen.mc.textRenderer.getWidth(settingName) - 10,
-                this.y + this.height / 2 - ViewmodelScreen.mc.textRenderer.fontHeight / 2,
+                this.x,
+                this.y - 15,
                 nameColor
         );
 
@@ -98,10 +96,6 @@ public class Switch implements ViewmodelGuiObj {
 
         // Основной фон
         drawRoundedRect(context, this.x, this.y, this.width, this.height, bgColor);
-
-        // Верхний блик (glass эффект)
-        int highlightHeight = this.height / 2;
-        drawRoundedRect(context, this.x, this.y, this.width, highlightHeight, 0x20FFFFFF);
 
         // Внутренняя тень для глубины
         if (!isEnabled) {
@@ -127,9 +121,6 @@ public class Switch implements ViewmodelGuiObj {
         // Ручка с glass эффектом
         drawCircle(context, toggleX, toggleY, hoverSize, 0xFFFFFFFF);
 
-        // Блик на ручке (верхняя половина)
-        int blickSize = hoverSize / 2;
-        drawCircle(context, toggleX, toggleY, blickSize, 0x40FFFFFF);
 
         // Рамка переключателя
         int borderColor;
@@ -140,60 +131,10 @@ public class Switch implements ViewmodelGuiObj {
         }
         drawRoundedBorder(context, this.x, this.y, this.width, this.height, borderColor);
 
-        // Индикатор состояния справа
-        String stateText = isEnabled ? "ВКЛ" : "ВЫКЛ";
-        int stateColor;
-        if (isEnabled) {
-            stateColor = 0xFF34C759; // iOS зеленый
-        } else {
-            stateColor = 0xFFFF3B30; // iOS красный
-        }
-
         int stateX = this.x + this.width + 10;
         int stateY = this.y + this.height / 2 - ViewmodelScreen.mc.textRenderer.fontHeight / 2;
-
-        // Glass подложка для текста состояния при наведении
-        if (isHovered) {
-            int textWidth = ViewmodelScreen.mc.textRenderer.getWidth(stateText);
-            context.fill(stateX - 3, stateY - 2, stateX + textWidth + 3,
-                    stateY + ViewmodelScreen.mc.textRenderer.fontHeight + 2, 0x30FFFFFF);
-        }
-
-        context.drawTextWithShadow(ViewmodelScreen.mc.textRenderer, stateText, stateX, stateY, stateColor);
-
-        // Подсказка при наведении
-        if (isHovered && !tooltip.isEmpty()) {
-            renderTooltip(context, mouseX, mouseY);
-        }
     }
 
-    /**
-     * Рисует подсказку
-     */
-    private void renderTooltip(DrawContext context, int mouseX, int mouseY) {
-        int tooltipWidth = ViewmodelScreen.mc.textRenderer.getWidth(tooltip);
-        int tooltipX = mouseX + 10;
-        int tooltipY = mouseY - 20;
-
-        if (tooltipX + tooltipWidth + 8 > ViewmodelScreen.mc.getWindow().getScaledWidth()) {
-            tooltipX = mouseX - tooltipWidth - 10;
-        }
-
-        context.fill(tooltipX - 4, tooltipY - 3, tooltipX + tooltipWidth + 4,
-                tooltipY + ViewmodelScreen.mc.textRenderer.fontHeight + 3, 0x90000000);
-        context.fill(tooltipX - 4, tooltipY - 3, tooltipX + tooltipWidth + 4,
-                tooltipY + 2, 0x30FFFFFF);
-
-        drawBorder(context, tooltipX - 4, tooltipY - 3, tooltipWidth + 8,
-                ViewmodelScreen.mc.textRenderer.fontHeight + 6, 0x60FFFFFF);
-
-        context.drawTextWithShadow(ViewmodelScreen.mc.textRenderer, tooltip,
-                tooltipX, tooltipY, 0xFFFFFFFF);
-    }
-
-    /**
-     * Рисует закругленный прямоугольник (имитация)
-     */
     private void drawRoundedRect(DrawContext context, int x, int y, int width, int height, int color) {
         // Основной прямоугольник
         context.fill(x + 2, y, x + width - 2, y + height, color);

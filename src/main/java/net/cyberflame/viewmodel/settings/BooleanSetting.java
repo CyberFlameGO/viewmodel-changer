@@ -56,7 +56,7 @@ public non-sealed class BooleanSetting implements Setting<Boolean> {
     public final void createUIElementWithTooltip(@NotNull Collection<? super ViewmodelGuiObj> objs,
                                                  int settingIndex, int x, int y,
                                                  int width, int height, String tooltip) {
-        int switchSize = Math.max(12, height);
+        int switchSize = Math.max(12, height + 2);
         Switch switchObj = new Switch(this, x, y, switchSize);
         switchObj.setTooltip(tooltip);
         objs.add(switchObj);

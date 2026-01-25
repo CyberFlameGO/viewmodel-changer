@@ -69,7 +69,7 @@ public non-sealed class FloatSetting implements Setting<Float> {
     public final void createUIElementWithTooltip(@NotNull Collection<? super ViewmodelGuiObj> objs,
                                                  int settingIndex, int x, int y,
                                                  int width, int height, String tooltip) {
-        int sliderWidth = Math.min(width, 200);
+        int sliderWidth = Math.min(width, 230);
         int sliderHeight = Math.max(12, height);
         Slider slider = new Slider(this, x, y, sliderWidth, sliderHeight);
         slider.setTooltip(tooltip);
