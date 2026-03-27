@@ -2,11 +2,11 @@ package net.cyberflame.viewmodel.gui;
 
 import net.cyberflame.viewmodel.Viewmodel;
 import net.cyberflame.viewmodel.settings.Setting;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -15,11 +15,11 @@ import static java.util.stream.IntStream.range;
 
 public class ViewmodelScreen extends Screen {
 
-    static final MinecraftClient mc = MinecraftClient.getInstance();
+    static final Minecraft mc = Minecraft.getInstance();
     private final Collection<ViewmodelGuiObj> objs = new ArrayList<>(3);
 
     public ViewmodelScreen() {
-        super(Text.of("Viewmodel"));
+        super(Component.nullToEmpty("Viewmodel"));
     }
 
     @Override
@@ -30,22 +30,23 @@ public class ViewmodelScreen extends Screen {
             var setting = settingsList.get(i);
             setting.createUIElement(this.objs, i);
         });
+
     }
 
     @Override
-    public final void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public final void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         context.fill(0, 0, this.width, this.height, 0xAA000000); // semi-transparent black
         this.objs.forEach(obj -> obj.render(context, mouseX, mouseY));
     }
 
     @Override
-    public final boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public final boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleClick) {
         for (ViewmodelGuiObj obj : this.objs) {
-            if (obj.isWithin(mouseX, mouseY)) {
-                obj.mouseClicked(mouseX, mouseY);
+            if (obj.isWithin(mouseButtonEvent.x(), mouseButtonEvent.y())) {
+                obj.mouseClicked(mouseButtonEvent.x(), mouseButtonEvent.y());
             }
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(mouseButtonEvent, doubleClick);
     }
 
     @Override

@@ -8,8 +8,8 @@ import net.cyberflame.viewmodel.settings.SettingType;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Contract;
@@ -25,13 +25,16 @@ import java.util.stream.Collectors;
 
 import static java.lang.Runtime.getRuntime;
 
+import com.mojang.blaze3d.platform.InputConstants;
+
 public class Viewmodel implements ModInitializer {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final List<Setting<?>> SETTINGS = Arrays.stream(SettingType.values())
             .map(SettingType::getSetting)
             .collect(Collectors.toList());
-    private static KeyBinding keyBinding;
+    private static final KeyMapping.Category VIEWMODEL_CATEGORY = KeyMapping.Category.register(Identifier.fromNamespaceAndPath("viewmodel", "menu"));
+    private static KeyMapping keyBinding;
 
     @Contract(value = " -> new", pure = true)
     public static @NotNull List<Setting<?>> getSettings() {
@@ -53,11 +56,11 @@ public class Viewmodel implements ModInitializer {
             LOGGER.error("Failed to load settings!", e);
         }
         keyBinding = KeyBindingHelper.registerKeyBinding(
-                new KeyBinding("key.viewmodel.open", InputUtil.Type.KEYSYM,
-                        GLFW.GLFW_KEY_BACKSLASH, "category.viewmodel.menu"));
+                new KeyMapping("key.viewmodel.open", InputConstants.Type.KEYSYM,
+                        GLFW.GLFW_KEY_BACKSLASH, VIEWMODEL_CATEGORY));
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            while (keyBinding.wasPressed()) {
-                if (client.world != null) {
+            while (keyBinding.consumeClick()) {
+                if (client.level != null) {
                     client.setScreen(new ViewmodelScreen());
                 }
             }

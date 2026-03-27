@@ -1,6 +1,6 @@
 package net.cyberflame.viewmodel.gui;
 
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.GuiGraphics;
 
 public interface ViewmodelGuiObj {
 
@@ -9,7 +9,7 @@ public interface ViewmodelGuiObj {
 
     void mouseClicked(double mx, double my);
 
-    void render(DrawContext context, int mouseX, int mouseY);
+    void render(GuiGraphics context, int mouseX, int mouseY);
 
     boolean isWithin(double mouseX, double mouseY);
 
