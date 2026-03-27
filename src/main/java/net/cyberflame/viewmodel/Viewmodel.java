@@ -7,7 +7,7 @@ import net.cyberflame.viewmodel.settings.Setting;
 import net.cyberflame.viewmodel.settings.SettingType;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
@@ -55,7 +55,7 @@ public class Viewmodel implements ModInitializer {
         } catch (IOException e) {
             LOGGER.error("Failed to load settings!", e);
         }
-        keyBinding = KeyBindingHelper.registerKeyBinding(
+        keyBinding = KeyMappingHelper.registerKeyMapping(
                 new KeyMapping("key.viewmodel.open", InputConstants.Type.KEYSYM,
                         GLFW.GLFW_KEY_BACKSLASH, VIEWMODEL_CATEGORY));
         ClientTickEvents.END_CLIENT_TICK.register(client -> {

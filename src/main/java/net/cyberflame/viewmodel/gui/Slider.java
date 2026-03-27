@@ -1,7 +1,7 @@
 package net.cyberflame.viewmodel.gui;
 
 import net.cyberflame.viewmodel.settings.FloatSetting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -51,7 +51,7 @@ public class Slider implements ViewmodelGuiObj {
     }
 
     @Override
-    public final void render(@NotNull GuiGraphics context, int mouseX, int mouseY) {
+    public final void render(@NotNull GuiGraphicsExtractor context, int mouseX, int mouseY) {
         // Cache the FloatSetting and its properties
         FloatSetting floatSetting = this.setting;
         String settingName = floatSetting.getName();
@@ -59,13 +59,13 @@ public class Slider implements ViewmodelGuiObj {
         float minValue = floatSetting.getMin();
         float maxValue = floatSetting.getMax();
 
-        context.drawString(ViewmodelScreen.mc.font, settingName, this.x - ViewmodelScreen.mc.font.width(settingName) - 1, (int) (this.y + this.height / 2.0f - ViewmodelScreen.mc.font.lineHeight / 2.0f), -1);
+        context.text(ViewmodelScreen.mc.font, settingName, this.x - ViewmodelScreen.mc.font.width(settingName) - 1, (int) (this.y + this.height / 2.0f - ViewmodelScreen.mc.font.lineHeight / 2.0f), -1);
 
         // Calculate the filled width based on the cached settingValue, minValue, and maxValue
         int filledWidth = (int) (this.x + ((settingValue - minValue) / (maxValue - minValue)) * this.width);
         context.fill(this.x, this.y, filledWidth, this.y + this.height, -1);
 
-        context.drawString(ViewmodelScreen.mc.font, String.valueOf(round(settingValue)), this.x + this.width + 1, (int) (this.y + this.height / 2.0f - ViewmodelScreen.mc.font.lineHeight / 2.0f), -1);
+        context.text(ViewmodelScreen.mc.font, String.valueOf(round(settingValue)), this.x + this.width + 1, (int) (this.y + this.height / 2.0f - ViewmodelScreen.mc.font.lineHeight / 2.0f), -1);
     }
 
 

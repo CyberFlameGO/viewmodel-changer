@@ -3,7 +3,7 @@ package net.cyberflame.viewmodel.gui;
 import net.cyberflame.viewmodel.Viewmodel;
 import net.cyberflame.viewmodel.settings.Setting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
@@ -34,7 +34,7 @@ public class ViewmodelScreen extends Screen {
     }
 
     @Override
-    public final void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public final void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         context.fill(0, 0, this.width, this.height, 0xAA000000); // semi-transparent black
         this.objs.forEach(obj -> obj.render(context, mouseX, mouseY));
     }
