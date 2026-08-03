@@ -1,13 +1,14 @@
 package net.cyberflame.viewmodel.mixin;
 
-import net.minecraft.client.renderer.SubmitNodeCollector;
-import org.jetbrains.annotations.NotNull;
-import org.spongepowered.asm.mixin.*;
-
-import java.util.Objects;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.ItemInHandRenderer;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.item.ItemModelResolver;
+import net.minecraft.client.renderer.state.MapRenderState;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
@@ -17,20 +18,54 @@ import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import org.jetbrains.annotations.NotNull;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 
 import static net.cyberflame.viewmodel.settings.SettingType.*;
-
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Axis;
 
 @Mixin(ItemInHandRenderer.class)
 public abstract class MixinHeldItemRenderer {
 
     @Shadow
-    protected abstract void renderPlayerArm(PoseStack matrices, SubmitNodeCollector vertexConsumers, int light, float equipProgress, float swingProgress, HumanoidArm arm);
+    @Final
+    private Minecraft minecraft;
+
+    @Shadow
+    @Final
+    private MapRenderState mapRenderState;
+
+    @Shadow
+    private ItemStack mainHandItem;
 
     @Shadow
     private ItemStack offHandItem;
+
+    @Shadow
+    private float mainHandHeight;
+
+    @Shadow
+    private float oMainHandHeight;
+
+    @Shadow
+    private float offHandHeight;
+
+    @Shadow
+    private float oOffHandHeight;
+
+    @Shadow
+    @Final
+    private EntityRenderDispatcher entityRenderDispatcher;
+
+    @Shadow
+    @Final
+    private ItemModelResolver itemModelResolver;
+
+    @Shadow
+    protected abstract void renderPlayerArm(PoseStack matrices, SubmitNodeCollector vertexConsumers, int light, float equipProgress, float swingProgress, HumanoidArm arm);
 
     @Shadow
     protected abstract void renderTwoHandedMap(PoseStack matrices, SubmitNodeCollector vertexConsumers, int light, float pitch, float equipProgress, float swingProgress);
@@ -38,11 +73,8 @@ public abstract class MixinHeldItemRenderer {
     @Shadow
     protected abstract void renderOneHandedMap(PoseStack matrices, SubmitNodeCollector vertexConsumers, int light, float equipProgress, HumanoidArm arm, float swingProgress, ItemStack stack);
 
-    @Shadow protected abstract void applyItemArmTransform(PoseStack matrices, HumanoidArm arm, float equipProgress);
-
     @Shadow
-    @Final
-    private Minecraft minecraft;
+    protected abstract void applyItemArmTransform(PoseStack matrices, HumanoidArm arm, float equipProgress);
 
     @Shadow
     protected abstract void applyItemArmAttackTransform(PoseStack matrices, HumanoidArm arm, float swingProgress);
@@ -60,8 +92,8 @@ public abstract class MixinHeldItemRenderer {
     @Overwrite
     public void submitArmWithItem(@NotNull AbstractClientPlayer player, float tickDelta, float pitch, InteractionHand hand, float swingProgress, ItemStack item, float equipProgress, PoseStack matrices, SubmitNodeCollector vertexConsumers, int light) {
         if (!player.isScoping()) {
-            boolean bl = InteractionHand.MAIN_HAND == hand;
-            HumanoidArm arm = bl ? player.getMainArm() : player.getMainArm().getOpposite();
+            boolean mainHand = InteractionHand.MAIN_HAND == hand;
+            HumanoidArm arm = mainHand ? player.getMainArm() : player.getMainArm().getOpposite();
             matrices.pushPose();
             if (POS.isTrue()) {
                 matrices.translate(POS_X.getFloatValue() * 0.1, POS_Y.getFloatValue() * 0.1, POS_Z.getFloatValue() * 0.1);
@@ -75,11 +107,11 @@ public abstract class MixinHeldItemRenderer {
                 matrices.scale(1 - (1 - SCALE_X.getFloatValue()) * 0.1F, 1 - (1 - SCALE_Y.getFloatValue()) * 0.1F, 1 - (1 - SCALE_Z.getFloatValue()) * 0.1F);
             }
             if (item.isEmpty()) {
-                if (bl && !player.isInvisible()) {
+                if (mainHand && !player.isInvisible()) {
                     this.renderPlayerArm(matrices, vertexConsumers, light, equipProgress, swingProgress, arm);
                 }
             } else if (item.is(Items.FILLED_MAP)) {
-                if (bl && this.offHandItem.isEmpty()) {
+                if (mainHand && this.offHandItem.isEmpty()) {
                     this.renderTwoHandedMap(matrices, vertexConsumers, light, pitch, equipProgress, swingProgress);
                 } else {
                     this.renderOneHandedMap(matrices, vertexConsumers, light, equipProgress, arm, swingProgress, item);
@@ -100,9 +132,11 @@ public abstract class MixinHeldItemRenderer {
                         matrices.mulPose(Axis.XP.rotationDegrees(-11.935F));
                         matrices.mulPose(Axis.YP.rotationDegrees(i * 65.3F));
                         matrices.mulPose(Axis.ZP.rotationDegrees(i * -9.785F));
-                        assert this.minecraft.player != null;
                         LivingEntity playerEntity = this.minecraft.player;
-                        v = item.getUseDuration(playerEntity) - (Objects.requireNonNull(playerEntity).getUseItemRemainingTicks() - tickDelta + 1.0F);
+                        if (playerEntity == null) {
+                            throw new IllegalStateException("minecraft.player was null while rendering a charged crossbow");
+                        }
+                        v = item.getUseDuration(playerEntity) - (playerEntity.getUseItemRemainingTicks() - tickDelta + 1.0F);
                         w = v / CrossbowItem.getChargeDuration(item, playerEntity);
                         if (1.0F < w) {
                             w = 1.0F;
@@ -125,7 +159,7 @@ public abstract class MixinHeldItemRenderer {
                         matrices.translate(i * v, w, x);
                         this.applyItemArmTransform(matrices, arm, equipProgress);
                         this.applyItemArmAttackTransform(matrices, arm, swingProgress);
-                        if (bl4 && 0.001F > swingProgress && bl) {
+                        if (bl4 && 0.001F > swingProgress && mainHand) {
                             matrices.translate((float) i * -0.641864F, 0.0D, 0.0D);
                             matrices.mulPose(Axis.YP.rotationDegrees(i * 10.0F));
                         }
@@ -176,8 +210,8 @@ public abstract class MixinHeldItemRenderer {
                         if (!CHANGE_SWING.isTrue()) {
                             matrices.translate((float) o * -0.4F, 0.800000011920929D, 0.30000001192092896D);
                         }
-                        matrices.mulPose(Axis.YP.rotationDegrees((float)o * 65.0F));
-                        matrices.mulPose(Axis.ZP.rotationDegrees((float)o * -85.0F));
+                        matrices.mulPose(Axis.YP.rotationDegrees((float) o * 65.0F));
+                        matrices.mulPose(Axis.ZP.rotationDegrees((float) o * -85.0F));
                     } else {
                         float aa = -0.4F * Mth.sin(Mth.sqrt(swingProgress) * 3.1415927F);
                         u = 0.2F * Mth.sin(Mth.sqrt(swingProgress) * 6.2831855F);
@@ -199,31 +233,30 @@ public abstract class MixinHeldItemRenderer {
 
     @Unique
     private static float getV(PoseStack matrices, float v, float u) {
-        float v1 = v;
         float w;
         float x;
         float y;
-        if (1.0F < v1) {
-            v1 = 1.0F;
+        if (1.0F < v) {
+            v = 1.0F;
         }
-        if (0.1F < v1) {
+        if (0.1F < v) {
             w = Mth.sin((u - 0.1F) * 1.3F);
-            x = v1 - 0.1F;
+            x = v - 0.1F;
             y = w * x;
             matrices.translate(y * 0.0F, y * 0.004F, y * 0.0F);
         }
-        return v1;
+        return v;
     }
 
     @Unique
     private static float getU(float tickDelta, @NotNull ItemStack item, @NotNull PoseStack matrices, float o, @NotNull Minecraft client) {
-        float u;
         matrices.mulPose(Axis.YP.rotationDegrees(o * 35.3F));
         matrices.mulPose(Axis.ZP.rotationDegrees(o * -9.785F));
-        assert null != client.player;
         LivingEntity playerEntity = client.player;
-        u = (float) item.getUseDuration(playerEntity) - ((float) playerEntity.getUseItemRemainingTicks() - tickDelta + 1.0F);
-        return u;
+        if (playerEntity == null) {
+            throw new IllegalStateException("minecraft.player was null while rendering a bow or spear");
+        }
+        return (float) item.getUseDuration(playerEntity) - (playerEntity.getUseItemRemainingTicks() - tickDelta + 1.0F);
     }
 
 }
