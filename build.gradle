@@ -47,11 +47,14 @@ base {
 	archivesName = project.archives_base_name
 }
 
-processResources {
-	inputs.property 'version', project.version
+def modVersion = project.version.toString()
+def archivesBaseName = base.archivesName.get()
+
+tasks.named('processResources').configure {
+	inputs.property 'version', modVersion
 
 	filesMatching('fabric.mod.json') {
-		expand "version": project.version
+		expand version: modVersion
 	}
 }
 
@@ -79,7 +82,7 @@ java {
 
 jar {
 	from('LICENSE') {
-		rename { "${it}_${base.archivesName.get()}"}
+		rename { "${it}_${archivesBaseName}" }
 	}
 }
 
