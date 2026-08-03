@@ -61,7 +61,7 @@ public class Viewmodel implements ModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (keyBinding.consumeClick()) {
                 if (client.level != null) {
-                    client.setScreen(new ViewmodelScreen());
+                    client.gui.setScreen(new ViewmodelScreen());
                 }
             }
         });

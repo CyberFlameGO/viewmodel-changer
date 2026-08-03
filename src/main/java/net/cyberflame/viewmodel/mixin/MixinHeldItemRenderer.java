@@ -8,7 +8,6 @@ import java.util.Objects;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.ItemInHandRenderer;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
@@ -59,7 +58,7 @@ public abstract class MixinHeldItemRenderer {
      * @reason The inject would always cancel and therefore can cause incompatibilities with other mods.
      */
     @Overwrite
-    public void renderArmWithItem(@NotNull AbstractClientPlayer player, float tickDelta, float pitch, InteractionHand hand, float swingProgress, ItemStack item, float equipProgress, PoseStack matrices, SubmitNodeCollector vertexConsumers, int light) {
+    public void submitArmWithItem(@NotNull AbstractClientPlayer player, float tickDelta, float pitch, InteractionHand hand, float swingProgress, ItemStack item, float equipProgress, PoseStack matrices, SubmitNodeCollector vertexConsumers, int light) {
         if (!player.isScoping()) {
             boolean bl = InteractionHand.MAIN_HAND == hand;
             HumanoidArm arm = bl ? player.getMainArm() : player.getMainArm().getOpposite();
