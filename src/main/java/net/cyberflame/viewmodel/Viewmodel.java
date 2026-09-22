@@ -15,7 +15,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
-import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -57,7 +56,7 @@ public class Viewmodel implements ModInitializer {
         }
         keyBinding = KeyMappingHelper.registerKeyMapping(
                 new KeyMapping("key.viewmodel.open", InputConstants.Type.KEYSYM,
-                        GLFW.GLFW_KEY_BACKSLASH, VIEWMODEL_CATEGORY));
+                        InputConstants.KEY_BACKSLASH, VIEWMODEL_CATEGORY));
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (keyBinding.consumeClick()) {
                 if (client.level != null) {
