@@ -55,7 +55,7 @@ public class Viewmodel implements ModInitializer {
             LOGGER.error("Failed to load settings!", e);
         }
         keyBinding = KeyMappingHelper.registerKeyMapping(
-                new KeyMapping("key.viewmodel.open", InputConstants.Type.KEYSYM,
+                new KeyMapping("key.viewmodel.open", InputConstants.Type.KEYBOARD,
                         InputConstants.KEY_BACKSLASH, VIEWMODEL_CATEGORY));
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (keyBinding.consumeClick()) {

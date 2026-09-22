@@ -2,261 +2,225 @@ package net.cyberflame.viewmodel.mixin;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.client.renderer.ItemInHandRenderer;
+import net.minecraft.client.model.effects.SpearAnimations;
+import net.minecraft.client.renderer.FirstPersonHandsAndItemsRenderer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
-import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
-import net.minecraft.client.renderer.item.ItemModelResolver;
-import net.minecraft.client.renderer.state.MapRenderState;
+import net.minecraft.client.renderer.entity.state.AvatarRenderState;
+import net.minecraft.client.renderer.state.level.FirstPersonHandsAndItemsRenderState;
+import net.minecraft.client.renderer.state.level.PlayerRenderState;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.CrossbowItem;
-import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemUseAnimation;
 import net.minecraft.world.item.Items;
-import org.jspecify.annotations.NonNull;
-import org.spongepowered.asm.mixin.Final;
+import net.minecraft.world.item.ShieldItem;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 
 import static net.cyberflame.viewmodel.settings.SettingType.*;
 
-@Mixin(ItemInHandRenderer.class)
+@Mixin(FirstPersonHandsAndItemsRenderer.class)
 public abstract class MixinHeldItemRenderer {
 
     @Shadow
-    @Final
-    private Minecraft minecraft;
+    protected abstract void renderPlayerArm(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, float inverseArmHeight, float attackValue, HumanoidArm arm, PlayerRenderState playerState);
 
     @Shadow
-    @Final
-    private MapRenderState mapRenderState;
+    protected abstract void renderTwoHandedMap(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, float xRot, float inverseArmHeight, float attackValue, PlayerRenderState playerState, FirstPersonHandsAndItemsRenderState state);
 
     @Shadow
-    private ItemStack mainHandItem;
+    protected abstract void renderOneHandedMap(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, float inverseArmHeight, HumanoidArm arm, float attackValue, ItemStack map, PlayerRenderState playerState, FirstPersonHandsAndItemsRenderState state);
 
     @Shadow
-    private ItemStack offHandItem;
+    protected abstract void applyItemArmTransform(PoseStack poseStack, HumanoidArm arm, float inverseArmHeight);
 
     @Shadow
-    private float mainHandHeight;
+    protected abstract void applyEatTransform(PoseStack poseStack, float partialTicks, HumanoidArm arm, float useItemRemainingTicks, int useDuration);
 
     @Shadow
-    private float oMainHandHeight;
+    protected abstract void applyBrushTransform(PoseStack poseStack, float partialTicks, HumanoidArm arm, float useItemRemainingTicks);
 
     @Shadow
-    private float offHandHeight;
-
-    @Shadow
-    private float oOffHandHeight;
-
-    @Shadow
-    @Final
-    private EntityRenderDispatcher entityRenderDispatcher;
-
-    @Shadow
-    @Final
-    private ItemModelResolver itemModelResolver;
-
-    @Shadow
-    protected abstract void renderPlayerArm(PoseStack matrices, SubmitNodeCollector vertexConsumers, int light, float equipProgress, float swingProgress, HumanoidArm arm);
-
-    @Shadow
-    protected abstract void renderTwoHandedMap(PoseStack matrices, SubmitNodeCollector vertexConsumers, int light, float pitch, float equipProgress, float swingProgress);
-
-    @Shadow
-    protected abstract void renderOneHandedMap(PoseStack matrices, SubmitNodeCollector vertexConsumers, int light, float equipProgress, HumanoidArm arm, float swingProgress, ItemStack stack);
-
-    @Shadow
-    protected abstract void applyItemArmTransform(PoseStack matrices, HumanoidArm arm, float equipProgress);
-
-    @Shadow
-    protected abstract void applyItemArmAttackTransform(PoseStack matrices, HumanoidArm arm, float swingProgress);
-
-    @Shadow
-    public abstract void renderItem(LivingEntity entity, ItemStack stack, ItemDisplayContext renderMode, PoseStack matrices, SubmitNodeCollector vertexConsumers, int light);
-
-    @Shadow
-    protected abstract void applyEatTransform(PoseStack matrices, float tickDelta, HumanoidArm arm, ItemStack stack, Player player);
+    protected abstract void swingArm(float animation, PoseStack poseStack, int invert, HumanoidArm arm);
 
     /**
      * @author CyberFlame
      * @reason The inject would always cancel and therefore can cause incompatibilities with other mods.
      */
     @Overwrite
-    public void submitArmWithItem(@NonNull AbstractClientPlayer player, float tickDelta, float pitch, InteractionHand hand, float swingProgress, ItemStack item, float equipProgress, PoseStack matrices, SubmitNodeCollector vertexConsumers, int light) {
-        if (!player.isScoping()) {
-            boolean mainHand = InteractionHand.MAIN_HAND == hand;
-            HumanoidArm arm = mainHand ? player.getMainArm() : player.getMainArm().getOpposite();
-            matrices.pushPose();
-            if (POS.isTrue()) {
-                matrices.translate(POS_X.getFloatValue() * 0.1, POS_Y.getFloatValue() * 0.1, POS_Z.getFloatValue() * 0.1);
-            }
-            if (ROTATION.isTrue()) {
-                matrices.mulPose(Axis.YP.rotationDegrees(ROTATION_Y.getFloatValue()));
-                matrices.mulPose(Axis.XP.rotationDegrees(ROTATION_X.getFloatValue()));
-                matrices.mulPose(Axis.ZP.rotationDegrees(ROTATION_Z.getFloatValue()));
-            }
-            if (SCALE.isTrue()) {
-                matrices.scale(1 - (1 - SCALE_X.getFloatValue()) * 0.1F, 1 - (1 - SCALE_Y.getFloatValue()) * 0.1F, 1 - (1 - SCALE_Z.getFloatValue()) * 0.1F);
-            }
-            if (item.isEmpty()) {
-                if (mainHand && !player.isInvisible()) {
-                    this.renderPlayerArm(matrices, vertexConsumers, light, equipProgress, swingProgress, arm);
+    private void submitArmWithItem(PlayerRenderState playerState, FirstPersonHandsAndItemsRenderState state, float partialTicks, float xRot, InteractionHand hand, float attack, ItemStack itemStack, float inverseArmHeight, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords) {
+        if (!state.isScoping) {
+            AvatarRenderState avatarRenderState = playerState.avatarRenderState;
+            if (avatarRenderState != null) {
+                boolean isMainHand = hand == InteractionHand.MAIN_HAND;
+                HumanoidArm arm = isMainHand ? avatarRenderState.mainArm : avatarRenderState.mainArm.getOpposite();
+                int useDuration = isMainHand ? state.mainHandUseDuration : state.offHandUseDuration;
+                int chargeDuration = isMainHand ? state.mainHandChargeDuration : state.offHandChargeDuration;
+                poseStack.pushPose();
+                if (POS.isTrue()) {
+                    poseStack.translate(POS_X.getFloatValue() * 0.1, POS_Y.getFloatValue() * 0.1, POS_Z.getFloatValue() * 0.1);
                 }
-            } else if (item.is(Items.FILLED_MAP)) {
-                if (mainHand && this.offHandItem.isEmpty()) {
-                    this.renderTwoHandedMap(matrices, vertexConsumers, light, pitch, equipProgress, swingProgress);
-                } else {
-                    this.renderOneHandedMap(matrices, vertexConsumers, light, equipProgress, arm, swingProgress, item);
+                if (ROTATION.isTrue()) {
+                    poseStack.rotateDegrees(Axis.YP, ROTATION_Y.getFloatValue());
+                    poseStack.rotateDegrees(Axis.XP, ROTATION_X.getFloatValue());
+                    poseStack.rotateDegrees(Axis.ZP, ROTATION_Z.getFloatValue());
                 }
-            } else {
-                boolean bl4;
-                float v;
-                float w;
-                float x;
-                float y;
-                if (item.is(Items.CROSSBOW)) {
-                    bl4 = CrossbowItem.isCharged(item);
-                    boolean bl3 = HumanoidArm.RIGHT == arm;
-                    int i = bl3 ? 1 : -1;
-                    if (player.isUsingItem() && 0 < player.getUseItemRemainingTicks() && player.getUsedItemHand() == hand) {
-                        this.applyItemArmTransform(matrices, arm, equipProgress);
-                        matrices.translate((float)i * -0.4785682F, -0.0943870022892952D, 0.05731530860066414D);
-                        matrices.mulPose(Axis.XP.rotationDegrees(-11.935F));
-                        matrices.mulPose(Axis.YP.rotationDegrees(i * 65.3F));
-                        matrices.mulPose(Axis.ZP.rotationDegrees(i * -9.785F));
-                        LivingEntity playerEntity = this.minecraft.player;
-                        if (playerEntity == null) {
-                            throw new IllegalStateException("minecraft.player was null while rendering a charged crossbow");
-                        }
-                        v = item.getUseDuration(playerEntity) - (playerEntity.getUseItemRemainingTicks() - tickDelta + 1.0F);
-                        w = v / CrossbowItem.getChargeDuration(item, playerEntity);
-                        if (1.0F < w) {
-                            w = 1.0F;
-                        }
-
-                        if (0.1F < w) {
-                            x = Mth.sin((v - 0.1F) * 1.3F);
-                            y = w - 0.1F;
-                            float k = x * y;
-                            matrices.translate(k * 0.0F, k * 0.004F, k * 0.0F);
-                        }
-
-                        matrices.translate(w * 0.0F, w * 0.0F, w * 0.04F);
-                        matrices.scale(1.0F, 1.0F, 1.0F + w * 0.2F);
-                        matrices.mulPose(Axis.YN.rotationDegrees(i * 45.0F));
+                if (SCALE.isTrue()) {
+                    poseStack.scale(1 - (1 - SCALE_X.getFloatValue()) * 0.1F, 1 - (1 - SCALE_Y.getFloatValue()) * 0.1F, 1 - (1 - SCALE_Z.getFloatValue()) * 0.1F);
+                }
+                if (itemStack.isEmpty()) {
+                    if (isMainHand && !avatarRenderState.isInvisible) {
+                        this.renderPlayerArm(poseStack, submitNodeCollector, lightCoords, inverseArmHeight, attack, arm, playerState);
+                    }
+                } else if (itemStack.has(DataComponents.MAP_ID)) {
+                    if (isMainHand && state.offHandItem.isEmpty()) {
+                        this.renderTwoHandedMap(poseStack, submitNodeCollector, lightCoords, xRot, inverseArmHeight, attack, playerState, state);
                     } else {
-                        v = -0.4F * Mth.sin(Mth.sqrt(swingProgress) * 3.1415927F);
-                        w = 0.2F * Mth.sin(Mth.sqrt(swingProgress) * 6.2831855F);
-                        x = -0.2F * Mth.sin(swingProgress * 3.1415927F);
-                        matrices.translate(i * v, w, x);
-                        this.applyItemArmTransform(matrices, arm, equipProgress);
-                        this.applyItemArmAttackTransform(matrices, arm, swingProgress);
-                        if (bl4 && 0.001F > swingProgress && mainHand) {
-                            matrices.translate((float) i * -0.641864F, 0.0D, 0.0D);
-                            matrices.mulPose(Axis.YP.rotationDegrees(i * 10.0F));
+                        this.renderOneHandedMap(poseStack, submitNodeCollector, lightCoords, inverseArmHeight, arm, attack, itemStack, playerState, state);
+                    }
+                } else if (itemStack.is(Items.CROSSBOW)) {
+                    this.applyItemArmTransform(poseStack, arm, inverseArmHeight);
+                    boolean charged = CrossbowItem.isCharged(itemStack);
+                    boolean isRightArm = arm == HumanoidArm.RIGHT;
+                    int invert = isRightArm ? 1 : -1;
+                    if (avatarRenderState.isUsingItem && state.useItemRemainingTicks > 0 && avatarRenderState.useItemHand == hand && !charged) {
+                        poseStack.translate((float) invert * -0.4785682F, -0.094387F, 0.05731531F);
+                        poseStack.rotateDegrees(Axis.XP, -11.935F);
+                        poseStack.rotateDegrees(Axis.YP, (float) invert * 65.3F);
+                        poseStack.rotateDegrees(Axis.ZP, (float) invert * -9.785F);
+                        float timeHeld = (float) useDuration - (state.useItemRemainingTicks - partialTicks + 1.0F);
+                        float power = timeHeld / (float) chargeDuration;
+                        if (power > 1.0F) {
+                            power = 1.0F;
+                        }
+
+                        if (power > 0.1F) {
+                            float shakeOffset = Mth.sin((timeHeld - 0.1F) * 1.3F);
+                            float shakeIntensity = power - 0.1F;
+                            float shake = shakeOffset * shakeIntensity;
+                            poseStack.translate(shake * 0.0F, shake * 0.004F, shake * 0.0F);
+                        }
+
+                        poseStack.translate(power * 0.0F, power * 0.0F, power * 0.04F);
+                        poseStack.scale(1.0F, 1.0F, 1.0F + power * 0.2F);
+                        poseStack.rotateDegrees(Axis.YN, (float) invert * 45.0F);
+                    } else {
+                        this.swingArm(attack, poseStack, invert, arm);
+                        if (charged && attack < 0.001F && isMainHand) {
+                            poseStack.translate((float) invert * -0.641864F, 0.0F, 0.0F);
+                            poseStack.rotateDegrees(Axis.YP, (float) invert * 10.0F);
                         }
                     }
 
-                    this.renderItem(player, item, bl3 ? ItemDisplayContext.FIRST_PERSON_RIGHT_HAND : ItemDisplayContext.FIRST_PERSON_LEFT_HAND, matrices, vertexConsumers, light);
+                    (isMainHand ? state.mainHandRenderState : state.offHandRenderState)
+                            .submit(poseStack, submitNodeCollector, lightCoords, OverlayTexture.NO_OVERLAY, 0);
                 } else {
-                    bl4 = HumanoidArm.RIGHT == arm;
-                    int o;
-                    float u;
-                    if (player.isUsingItem() && 0 < player.getUseItemRemainingTicks() && player.getUsedItemHand() == hand) {
-                        o = bl4 ? 1 : -1;
-                        switch (item.getUseAnimation()) {
-                            case NONE, BLOCK -> this.applyItemArmTransform(matrices, arm, equipProgress);
+                    boolean isRightArm = arm == HumanoidArm.RIGHT;
+                    int invert = isRightArm ? 1 : -1;
+                    if (avatarRenderState.isUsingItem && state.useItemRemainingTicks > 0 && avatarRenderState.useItemHand == hand) {
+                        ItemUseAnimation useAnimation = itemStack.getUseAnimation();
+                        if (!useAnimation.hasCustomArmTransform()) {
+                            this.applyItemArmTransform(poseStack, arm, inverseArmHeight);
+                        }
+
+                        switch (useAnimation) {
+                            case NONE, SPYGLASS, TOOT_HORN -> {}
                             case EAT, DRINK -> {
-                                this.applyEatTransform(matrices, tickDelta, arm, item, player);
-                                this.applyItemArmTransform(matrices, arm, equipProgress);
+                                this.applyEatTransform(poseStack, partialTicks, arm, state.useItemRemainingTicks, useDuration);
+                                this.applyItemArmTransform(poseStack, arm, inverseArmHeight);
+                            }
+                            case BLOCK -> {
+                                if (!(itemStack.getItem() instanceof ShieldItem)) {
+                                    poseStack.translate((float) invert * -0.14142136F, 0.08F, 0.14142136F);
+                                    poseStack.rotateDegrees(Axis.XP, -102.25F);
+                                    poseStack.rotateDegrees(Axis.YP, (float) invert * 13.365F);
+                                    poseStack.rotateDegrees(Axis.ZP, (float) invert * 78.05F);
+                                }
                             }
                             case BOW -> {
-                                this.applyItemArmTransform(matrices, arm, equipProgress);
-                                matrices.translate((float) o * -0.2785682F, 0.18344387412071228D, 0.15731531381607056D);
-                                matrices.mulPose(Axis.XP.rotationDegrees(-13.935F));
-                                u = getU(tickDelta, item, matrices, o, this.minecraft);
-                                v = u / 20.0F;
-                                v = (v * v + v * 2.0F) / 3.0F;
-                                v = getV(matrices, v, u);
-                                matrices.translate(v * 0.0F, v * 0.0F, v * 0.04F);
-                                matrices.scale(1.0F, 1.0F, 1.0F + v * 0.2F);
-                                matrices.mulPose(Axis.YN.rotationDegrees((float) o * 45.0F));
+                                poseStack.translate((float) invert * -0.2785682F, 0.18344387F, 0.15731531F);
+                                poseStack.rotateDegrees(Axis.XP, -13.935F);
+                                poseStack.rotateDegrees(Axis.YP, (float) invert * 35.3F);
+                                poseStack.rotateDegrees(Axis.ZP, (float) invert * -9.785F);
+                                float timeHeld = (float) useDuration - (state.useItemRemainingTicks - partialTicks + 1.0F);
+                                float power = timeHeld / 20.0F;
+                                power = (power * power + power * 2.0F) / 3.0F;
+                                if (power > 1.0F) {
+                                    power = 1.0F;
+                                }
+
+                                if (power > 0.1F) {
+                                    float shakeOffset = Mth.sin((timeHeld - 0.1F) * 1.3F);
+                                    float shakeIntensity = power - 0.1F;
+                                    float shake = shakeOffset * shakeIntensity;
+                                    poseStack.translate(shake * 0.0F, shake * 0.004F, shake * 0.0F);
+                                }
+
+                                poseStack.translate(power * 0.0F, power * 0.0F, power * 0.04F);
+                                poseStack.scale(1.0F, 1.0F, 1.0F + power * 0.2F);
+                                poseStack.rotateDegrees(Axis.YN, (float) invert * 45.0F);
                             }
+                            case TRIDENT -> {
+                                poseStack.translate((float) invert * -0.5F, 0.7F, 0.1F);
+                                poseStack.rotateDegrees(Axis.XP, -55.0F);
+                                poseStack.rotateDegrees(Axis.YP, (float) invert * 35.3F);
+                                poseStack.rotateDegrees(Axis.ZP, (float) invert * -9.785F);
+                                float timeHeld = (float) useDuration - (state.useItemRemainingTicks - partialTicks + 1.0F);
+                                float power = timeHeld / 10.0F;
+                                if (power > 1.0F) {
+                                    power = 1.0F;
+                                }
+
+                                if (power > 0.1F) {
+                                    float shakeOffset = Mth.sin((timeHeld - 0.1F) * 1.3F);
+                                    float shakeIntensity = power - 0.1F;
+                                    float shake = shakeOffset * shakeIntensity;
+                                    poseStack.translate(shake * 0.0F, shake * 0.004F, shake * 0.0F);
+                                }
+
+                                poseStack.translate(0.0F, 0.0F, power * 0.2F);
+                                poseStack.scale(1.0F, 1.0F, 1.0F + power * 0.2F);
+                                poseStack.rotateDegrees(Axis.YN, (float) invert * 45.0F);
+                            }
+                            case BRUSH -> this.applyBrushTransform(poseStack, partialTicks, arm, state.useItemRemainingTicks);
+                            case BUNDLE, CROSSBOW -> this.swingArm(attack, poseStack, invert, arm);
                             case SPEAR -> {
-                                this.applyItemArmTransform(matrices, arm, equipProgress);
-                                matrices.translate((float) o * -0.5F, 0.699999988079071D, 0.10000000149011612D);
-                                matrices.mulPose(Axis.XP.rotationDegrees(-55.0F));
-                                u = getU(tickDelta, item, matrices, o, this.minecraft);
-                                v = u / 10.0F;
-                                v = getV(matrices, v, u);
-                                matrices.translate(0.0D, 0.0D, v * 0.2F);
-                                matrices.scale(1.0F, 1.0F, 1.0F + v * 0.2F);
-                                matrices.mulPose(Axis.YN.rotationDegrees((float) o * 45.0F));
-                            }
-                            default -> {
+                                poseStack.translate((float) invert * 0.56F, -0.52F, -0.72F);
+                                float timeHeld = (float) useDuration - (state.useItemRemainingTicks - partialTicks + 1.0F);
+                                SpearAnimations.firstPersonUse(avatarRenderState.ticksSinceKineticHitFeedback, poseStack, timeHeld, arm, itemStack);
                             }
                         }
-                    } else if (player.isAutoSpinAttack()) {
-                        this.applyItemArmTransform(matrices, arm, equipProgress);
-                        o = bl4 ? 1 : -1;
+                    } else if (avatarRenderState.isAutoSpinAttack) {
+                        this.applyItemArmTransform(poseStack, arm, inverseArmHeight);
                         if (!CHANGE_SWING.isTrue()) {
-                            matrices.translate((float) o * -0.4F, 0.800000011920929D, 0.30000001192092896D);
+                            poseStack.translate((float) invert * -0.4F, 0.8F, 0.3F);
                         }
-                        matrices.mulPose(Axis.YP.rotationDegrees((float) o * 65.0F));
-                        matrices.mulPose(Axis.ZP.rotationDegrees((float) o * -85.0F));
+                        poseStack.rotateDegrees(Axis.YP, (float) invert * 65.0F);
+                        poseStack.rotateDegrees(Axis.ZP, (float) invert * -85.0F);
                     } else {
-                        float aa = -0.4F * Mth.sin(Mth.sqrt(swingProgress) * 3.1415927F);
-                        u = 0.2F * Mth.sin(Mth.sqrt(swingProgress) * 6.2831855F);
-                        v = -0.2F * Mth.sin(swingProgress * 3.1415927F);
-                        int ad = bl4 ? 1 : -1;
-                        matrices.translate(ad * aa, u, v);
-                        this.applyItemArmTransform(matrices, arm, equipProgress);
-                        this.applyItemArmAttackTransform(matrices, arm, swingProgress);
+                        this.applyItemArmTransform(poseStack, arm, inverseArmHeight);
+                        LivingEntity.SwingDescription currentSwing = avatarRenderState.currentSwing;
+                        if (currentSwing != null && hand == currentSwing.hand()) {
+                            switch (currentSwing.animation().type()) {
+                                case NONE -> {}
+                                case WHACK -> this.swingArm(attack, poseStack, invert, arm);
+                                case STAB -> SpearAnimations.firstPersonAttack(attack, poseStack, invert, arm);
+                            }
+                        }
                     }
 
-                    this.renderItem(player, item, bl4 ? ItemDisplayContext.FIRST_PERSON_RIGHT_HAND : ItemDisplayContext.FIRST_PERSON_LEFT_HAND, matrices, vertexConsumers, light);
+                    (isMainHand ? state.mainHandRenderState : state.offHandRenderState)
+                            .submit(poseStack, submitNodeCollector, lightCoords, OverlayTexture.NO_OVERLAY, 0);
                 }
+
+                poseStack.popPose();
             }
-
-            matrices.popPose();
         }
-
     }
-
-    @Unique
-    private static float getV(PoseStack matrices, float v, float u) {
-        float w;
-        float x;
-        float y;
-        if (1.0F < v) {
-            v = 1.0F;
-        }
-        if (0.1F < v) {
-            w = Mth.sin((u - 0.1F) * 1.3F);
-            x = v - 0.1F;
-            y = w * x;
-            matrices.translate(y * 0.0F, y * 0.004F, y * 0.0F);
-        }
-        return v;
-    }
-
-    @Unique
-    private static float getU(float tickDelta, @NonNull ItemStack item, @NonNull PoseStack matrices, float o, @NonNull Minecraft client) {
-        matrices.mulPose(Axis.YP.rotationDegrees(o * 35.3F));
-        matrices.mulPose(Axis.ZP.rotationDegrees(o * -9.785F));
-        LivingEntity playerEntity = client.player;
-        if (playerEntity == null) {
-            throw new IllegalStateException("minecraft.player was null while rendering a bow or spear");
-        }
-        return (float) item.getUseDuration(playerEntity) - (playerEntity.getUseItemRemainingTicks() - tickDelta + 1.0F);
-    }
-
 }
