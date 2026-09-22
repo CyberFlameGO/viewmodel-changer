@@ -18,7 +18,7 @@ import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -90,7 +90,7 @@ public abstract class MixinHeldItemRenderer {
      * @reason The inject would always cancel and therefore can cause incompatibilities with other mods.
      */
     @Overwrite
-    public void submitArmWithItem(@NotNull AbstractClientPlayer player, float tickDelta, float pitch, InteractionHand hand, float swingProgress, ItemStack item, float equipProgress, PoseStack matrices, SubmitNodeCollector vertexConsumers, int light) {
+    public void submitArmWithItem(@NonNull AbstractClientPlayer player, float tickDelta, float pitch, InteractionHand hand, float swingProgress, ItemStack item, float equipProgress, PoseStack matrices, SubmitNodeCollector vertexConsumers, int light) {
         if (!player.isScoping()) {
             boolean mainHand = InteractionHand.MAIN_HAND == hand;
             HumanoidArm arm = mainHand ? player.getMainArm() : player.getMainArm().getOpposite();
@@ -249,7 +249,7 @@ public abstract class MixinHeldItemRenderer {
     }
 
     @Unique
-    private static float getU(float tickDelta, @NotNull ItemStack item, @NotNull PoseStack matrices, float o, @NotNull Minecraft client) {
+    private static float getU(float tickDelta, @NonNull ItemStack item, @NonNull PoseStack matrices, float o, @NonNull Minecraft client) {
         matrices.mulPose(Axis.YP.rotationDegrees(o * 35.3F));
         matrices.mulPose(Axis.ZP.rotationDegrees(o * -9.785F));
         LivingEntity playerEntity = client.player;

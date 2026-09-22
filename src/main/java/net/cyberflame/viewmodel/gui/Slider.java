@@ -4,7 +4,7 @@ import net.cyberflame.viewmodel.settings.FloatSetting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -15,7 +15,7 @@ public class Slider implements ViewmodelGuiObj {
     private final int x, y, width, height;
     private final float min, max;
 
-    public Slider(@NotNull FloatSetting setting, int x, int y, int width, int height) {
+    public Slider(@NonNull FloatSetting setting, int x, int y, int width, int height) {
         super();
         this.setting = setting;
         this.x = x;
@@ -51,7 +51,7 @@ public class Slider implements ViewmodelGuiObj {
     }
 
     @Override
-    public final void render(@NotNull GuiGraphicsExtractor context, int mouseX, int mouseY) {
+    public final void render(@NonNull GuiGraphicsExtractor context, int mouseX, int mouseY) {
         // Cache the FloatSetting and its properties
         FloatSetting floatSetting = this.setting;
         String settingName = floatSetting.getName();

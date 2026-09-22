@@ -3,7 +3,7 @@ package net.cyberflame.viewmodel.gui;
 import net.cyberflame.viewmodel.settings.BooleanSetting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 public record Switch(BooleanSetting setting, int x, int y, int height) implements ViewmodelGuiObj {
 
@@ -13,7 +13,7 @@ public record Switch(BooleanSetting setting, int x, int y, int height) implement
     }
 
     @Override
-    public void render(@NotNull GuiGraphicsExtractor context, int mouseX, int mouseY) {
+    public void render(@NonNull GuiGraphicsExtractor context, int mouseX, int mouseY) {
         // Cache the BooleanSetting and its properties
         BooleanSetting booleanSetting = this.setting;
         String settingName = booleanSetting.getName();

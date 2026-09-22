@@ -5,7 +5,7 @@ import com.google.gson.JsonPrimitive;
 import net.cyberflame.viewmodel.gui.Slider;
 import net.cyberflame.viewmodel.gui.ViewmodelGuiObj;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Collection;
 
@@ -38,7 +38,7 @@ public non-sealed class FloatSetting implements Setting<Float> {
     }
 
     @Override
-    public final void setValue(@NotNull JsonElement element) {
+    public final void setValue(@NonNull JsonElement element) {
         if (element.isJsonPrimitive() && element.getAsJsonPrimitive().isNumber()) {
             this.value = element.getAsFloat();
         }
@@ -46,7 +46,7 @@ public non-sealed class FloatSetting implements Setting<Float> {
 
     @Contract(value = " -> new", pure = true)
     @Override
-    public final @NotNull JsonElement toJson() {
+    public final @NonNull JsonElement toJson() {
         return new JsonPrimitive(this.value);
     }
 
@@ -57,7 +57,7 @@ public non-sealed class FloatSetting implements Setting<Float> {
     }
 
     @Override
-    public final void createUIElement(@NotNull Collection<? super ViewmodelGuiObj> objs, int settingCount) {
+    public final void createUIElement(@NonNull Collection<? super ViewmodelGuiObj> objs, int settingCount) {
         // Create UI element for FloatSetting
         objs.add(new Slider(this, 80, 50 + (settingCount << 4), 80, 12));
     }

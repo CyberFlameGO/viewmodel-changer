@@ -5,7 +5,7 @@ import com.google.gson.JsonPrimitive;
 import net.cyberflame.viewmodel.gui.Switch;
 import net.cyberflame.viewmodel.gui.ViewmodelGuiObj;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Collection;
 
@@ -23,7 +23,7 @@ public non-sealed class BooleanSetting implements Setting<Boolean> {
 
     @Contract(value = " -> new", pure = true)
     @Override
-    public final @NotNull JsonElement toJson() {
+    public final @NonNull JsonElement toJson() {
         return new JsonPrimitive(this.value);
     }
 
@@ -34,7 +34,7 @@ public non-sealed class BooleanSetting implements Setting<Boolean> {
     }
 
     @Override
-    public final void setValue(@NotNull JsonElement element) {
+    public final void setValue(@NonNull JsonElement element) {
         if (element.isJsonPrimitive() && element.getAsJsonPrimitive().isBoolean()) {
             this.value = element.getAsBoolean();
         }
@@ -58,7 +58,7 @@ public non-sealed class BooleanSetting implements Setting<Boolean> {
     }
 
     @Override
-    public final void createUIElement(@NotNull Collection<? super ViewmodelGuiObj> objs, int settingCount) {
+    public final void createUIElement(@NonNull Collection<? super ViewmodelGuiObj> objs, int settingCount) {
         objs.add(new Switch(this, 80, 50 + (settingCount << 4), 12));
     }
 
